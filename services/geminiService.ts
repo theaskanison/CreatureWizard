@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { CreatureData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
 // Using nano banana model as requested for image generation from sketch
 const MODEL_NAME = 'gemini-2.5-flash-image';
