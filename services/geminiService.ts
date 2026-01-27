@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
 const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
