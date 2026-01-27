@@ -1,0 +1,8 @@
+{
+  "name": "Creature Wizard",
+  "description": "Turn children's sketches into fully rendered trading cards using Gemini.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
