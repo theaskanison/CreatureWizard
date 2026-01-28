@@ -1,18 +1,19 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
+// Initialize the AI with your Vercel Environment Variable
 const ai = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
-// Using nano banana model as requested for image generation from sketch
-const MODEL_NAME = 'gemini-2.5-flash-image';
+// Use a stable public model name
+const MODEL_NAME = 'gemini-1.5-flash';
 
 export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
   if (!creature.sketchBase64) {
     throw new Error("No sketch provided");
   }
 
-  // Extract base64 data without the prefix if present
   const base64Data = creature.sketchBase64.split(',')[1] || creature.sketchBase64;
+  const model = ai.getGenerativeModel({ model: MODEL_NAME });
 
   const colorInstruction = creature.selectedColors.length > 0 
     ? `Primary Colors to use: ${creature.selectedColors.join(', ')}. Color Harmony Strategy: ${creature.colorHarmony}.`
@@ -21,82 +22,29 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   const prompt = `
     Generate a vertical Trading Card Game card (3:4 aspect ratio) based on the attached sketch.
     
-    Card Data to Display (Must be legible):
-    - Name: "${creature.name}" (Place at the top)
-    - HP: "${creature.hp} HP" (Place at the top right)
-    - Element: "${creature.type}" (Theme the card border/background around this)
-    - Attack Move: "${creature.specialAbility}" (Place in the lower text box)
-    - Damage: "${creature.specialAbilityDamage}" (Place next to the attack)
-    - Flavor Text: "${creature.description}" (Small text at the bottom)
+    Card Data:
+    - Name: "${creature.name}"
+    - HP: "${creature.hp} HP"
+    - Element: "${creature.type}"
+    - Attack Move: "${creature.specialAbility}"
+    - Damage: "${creature.specialAbilityDamage}"
+    - Flavor Text: "${creature.description}"
     
     Design Instructions:
-    1. ORIENTATION: Vertical (Portrait). The card must be taller than it is wide.
-    2. LAYOUT: Standard monster card layout (like Pokemon).
-       - Top Header: Name and HP.
-       - Center: Large, vibrant illustration of the monster.
-       - Bottom Panel: Attack details, Damage number, and Description.
-    3. ART STYLE: High-quality, vibrant 3D render style, similar to popular monster collecting card games.
-    4. SKETCH INTERPRETATION: ${creature.sketchFeatures}. The "scribbles" in the sketch should be interpreted as textures, energy, or specific body parts as described.
+    1. ORIENTATION: Vertical (3:4 aspect ratio).
+    2. LAYOUT: Standard monster card (Name/HP at top, illustration center, attack/desc bottom).
+    3. ART STYLE: High-quality, vibrant 3D render.
+    4. SKETCH INTERPRETATION: ${creature.sketchFeatures}.
     5. COLORS: ${colorInstruction}
-
-    IMPORTANT PRINTING INSTRUCTIONS:
-    - The card edges must be CLEAN, SOLID, and FLAT. 
-    - DO NOT ADD grunge, dirt, wear, tear, or realistic paper texture to the card border/frame.
-    - This image will be printed and laminated, so it needs to look like a digital vector asset (pristine condition), not a photo of an old card.
-    - NO background surface (no table, wood, or paper backdrop).
-    - NO perspective tilt; keep the card flat and front-facing (2D view).
-    - Crop perfectly to the card edge.
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: 'image/jpeg', // Assuming JPEG/PNG from canvas/input
-            },
-          },
-          {
-            text: prompt,
-          },
-        ],
-      },
-      config: {
-        imageConfig: {
-          aspectRatio: '3:4'
-        }
-      }
-    });
-
-    return extractImageFromResponse(response);
-  } catch (error) {
-    console.error("Error generating card:", error);
-    throw error;
-  }
-};
-
-export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
-  if (!creature.sketchBase64) {
-    throw new Error("No sketch provided");
-  }
-
-  const base64Data = creature.sketchBase64.split(',')[1] || creature.sketchBase64;
-
-  // CORRECT PUBLIC SDK SYNTAX:
-  const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-  const prompt = `Generate a vertical Trading Card Game card...`; // (Your full prompt here)
-
-  try {
     const result = await model.generateContent([
-      prompt,
+      { text: prompt },
       {
         inlineData: {
           data: base64Data,
-          mimeType: "image/jpeg",
+          mimeType: 'image/jpeg',
         },
       },
     ]);
@@ -108,6 +56,32 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
     throw error;
   }
 };
+
+export const editMonsterCard = async (currentImageBase64: string, editInstructions: string): Promise<string | null> => {
+  const base64Data = currentImageBase64.split(',')[1] || currentImageBase64;
+  const model = ai.getGenerativeModel({ model: MODEL_NAME });
+
+  const prompt = `Edit this trading card image based on: "${editInstructions}". Keep 3:4 aspect ratio and card layout.`;
+
+  try {
+    const result = await model.generateContent([
+      { text: prompt },
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: "image/png",
+        },
+      },
+    ]);
+
+    const response = await result.response;
+    return extractImageFromResponse(response);
+  } catch (error) {
+    console.error("Error editing card:", error);
+    throw error;
+  }
+};
+
 const extractImageFromResponse = (response: any): string | null => {
   const parts = response.candidates?.[0]?.content?.parts;
   if (parts) {
