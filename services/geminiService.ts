@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
+// Initialize with the Vercel environment variable
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 const MODEL_NAME = 'gemini-1.5-flash';
 
@@ -10,16 +11,21 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   const base64Data = creature.sketchBase64.split(',')[1] || creature.sketchBase64;
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-  const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}.`;
+  const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}. HP: ${creature.hp}. Ability: ${creature.specialAbility}.`;
 
   try {
-    // We must wrap everything in a 'contents' array for the Public SDK
+    // This nested structure is required to avoid the 404/Route error
     const result = await model.generateContent({
       contents: [{
         role: 'user',
         parts: [
           { text: prompt },
-          { inlineData: { data: base64Data, mimeType: 'image/jpeg' } }
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: 'image/jpeg'
+            }
+          }
         ]
       }]
     });
@@ -27,7 +33,7 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Detailed API Error:", error);
     throw error;
   }
 };
@@ -41,8 +47,13 @@ export const editMonsterCard = async (currentImageBase64: string, editInstructio
       contents: [{
         role: 'user',
         parts: [
-          { text: `Edit this card: ${editInstructions}` },
-          { inlineData: { data: base64Data, mimeType: "image/png" } }
+          { text: `Edit this trading card image based on: "${editInstructions}"` },
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType: "image/png"
+            }
+          }
         ]
       }]
     });
@@ -50,12 +61,13 @@ export const editMonsterCard = async (currentImageBase64: string, editInstructio
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Error:", error);
+    console.error("Detailed Edit Error:", error);
     throw error;
   }
 };
 
 const extractImageFromResponse = (response: any): string | null => {
+  // Navigation through the specific response structure of the public SDK
   const parts = response.candidates?.[0]?.content?.parts;
   if (parts) {
     for (const part of parts) {
