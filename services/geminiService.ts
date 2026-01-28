@@ -1,11 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
-// Initialize the API
+// Initialize with your Vercel key
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 
-// Use the standard stable model name for 2026
-const MODEL_NAME = 'gemini-1.5-flash';
+// Use the most stable, globally available public model alias
+const MODEL_NAME = 'gemini-1.5-flash-latest'; 
 
 export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
   if (!creature.sketchBase64) throw new Error("No sketch provided");
@@ -16,7 +16,7 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}. HP: ${creature.hp}. Ability: ${creature.specialAbility}.`;
 
   try {
-    // REQUIRED: Wrap everything in a 'contents' object to avoid the 404 error
+    // The public SDK requires this specific 'contents' object to avoid a 404 route error
     const result = await model.generateContent({
       contents: [{
         role: 'user',
@@ -30,7 +30,7 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Detailed Generation Error:", error);
+    console.error("API Error:", error);
     throw error;
   }
 };
@@ -53,7 +53,7 @@ export const editMonsterCard = async (currentImageBase64: string, editInstructio
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Detailed Edit Error:", error);
+    console.error("Edit Error:", error);
     throw error;
   }
 };
