@@ -78,55 +78,36 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   }
 };
 
-export const editMonsterCard = async (currentImageBase64: string, editInstructions: string): Promise<string | null> => {
-  const base64Data = currentImageBase64.split(',')[1] || currentImageBase64;
+export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
+  if (!creature.sketchBase64) {
+    throw new Error("No sketch provided");
+  }
 
-  const prompt = `
-    Edit this trading card image based on: "${editInstructions}".
-    
-    Instructions:
-    - Maintain the Vertical (Portrait) aspect ratio (3:4).
-    - Keep the "Trading Card" layout with clear text sections for Name, HP, and Attack.
-    - Ensure the text remains legible and consistent with the previous design.
-    - If the user asks to change the color, element, or features, update the monster illustration accordingly.
-    - Maintain the high-quality, vibrant 3D art style.
-    
-    IMPORTANT PRINTING INSTRUCTIONS:
-    - The output must remain perfectly cropped to the card edges.
-    - Clean, solid borders. No grunge texture. No table background.
-    - Keep the view flat and front-facing (digital asset style).
-  `;
+  const base64Data = creature.sketchBase64.split(',')[1] || creature.sketchBase64;
+
+  // CORRECT PUBLIC SDK SYNTAX:
+  const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `Generate a vertical Trading Card Game card...`; // (Your full prompt here)
 
   try {
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: base64Data,
-              mimeType: 'image/png',
-            },
-          },
-          {
-            text: prompt,
-          },
-        ],
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          data: base64Data,
+          mimeType: "image/jpeg",
+        },
       },
-      config: {
-        imageConfig: {
-          aspectRatio: '3:4'
-        }
-      }
-    });
+    ]);
 
+    const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Error editing card:", error);
+    console.error("Error generating card:", error);
     throw error;
   }
 };
-
 const extractImageFromResponse = (response: any): string | null => {
   const parts = response.candidates?.[0]?.content?.parts;
   if (parts) {
