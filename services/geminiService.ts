@@ -2,7 +2,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
-// Use the stable model name without extra suffixes
 const MODEL_NAME = 'gemini-1.5-flash';
 
 export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
@@ -11,10 +10,10 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   const base64Data = creature.sketchBase64.split(',')[1] || creature.sketchBase64;
   const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-  const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}. HP: ${creature.hp}. Ability: ${creature.specialAbility}.`;
+  const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}.`;
 
   try {
-    // Corrected object structure for generateContent
+    // We must wrap everything in a 'contents' array for the Public SDK
     const result = await model.generateContent({
       contents: [{
         role: 'user',
@@ -28,7 +27,7 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Detailed Generation Error:", error);
+    console.error("Error:", error);
     throw error;
   }
 };
@@ -51,7 +50,7 @@ export const editMonsterCard = async (currentImageBase64: string, editInstructio
     const response = await result.response;
     return extractImageFromResponse(response);
   } catch (error) {
-    console.error("Detailed Edit Error:", error);
+    console.error("Error:", error);
     throw error;
   }
 };
