@@ -1,11 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CreatureData } from "../types";
 
-// Initialize with your Vercel key
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
-
-// Use the most stable, globally available public model alias
-const MODEL_NAME = 'gemini-1.5-flash-latest'; 
+// 2026 FIXED MODEL ID: Avoids the retired '1.5' 404 error
+const MODEL_NAME = 'gemini-2.0-flash'; 
 
 export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
   if (!creature.sketchBase64) throw new Error("No sketch provided");
@@ -16,7 +14,6 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
   const prompt = `Generate a vertical TCG card for ${creature.name}. Element: ${creature.type}. HP: ${creature.hp}. Ability: ${creature.specialAbility}.`;
 
   try {
-    // The public SDK requires this specific 'contents' object to avoid a 404 route error
     const result = await model.generateContent({
       contents: [{
         role: 'user',
