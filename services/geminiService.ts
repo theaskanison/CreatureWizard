@@ -3,7 +3,7 @@ import { CreatureData } from "../types";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_API_KEY);
 // 2026 FIXED MODEL ID: Avoids the retired '1.5' 404 error
-const MODEL_NAME = 'gemini-2.0-flash'; 
+const MODEL_NAME = 'gemini-2.5-flash-latest'; 
 
 export const generateMonsterCard = async (creature: CreatureData): Promise<string | null> => {
   if (!creature.sketchBase64) throw new Error("No sketch provided");
