@@ -18,7 +18,7 @@ export const generateMonsterCard = async (creature: CreatureData): Promise<strin
       contents: [{
         role: 'user',
         parts: [
-          { text: prompt },
+          { text: prompt }, 
           { inlineData: { data: base64Data, mimeType: 'image/jpeg' } }
         ]
       }]
