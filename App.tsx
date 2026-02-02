@@ -26,6 +26,7 @@ function App() {
   const [creatureData, setCreatureData] = useState<CreatureData>(INITIAL_DATA);
   const [generatedCardUrl, setGeneratedCardUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
@@ -42,6 +43,8 @@ function App() {
   };
 
   const handleColorComplete = async () => {
+    if (isGenerating) return;
+    setIsGenerating(true);
     setStep(AppStep.GENERATING);
     try {
       const url = await generateMonsterCard(creatureData);
@@ -54,7 +57,9 @@ function App() {
     } catch (err) {
       console.error(err);
       setError("Oh no! The creation machine got jammed. Please try again.");
-      setStep(AppStep.INTERVIEW); // Go back to interview on error
+      setStep(AppStep.INTERVIEW);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -86,6 +91,7 @@ function App() {
     setError(null);
     setIsEditing(false);
     setEditPrompt('');
+    setIsGenerating(false);
   };
 
   const handleEditVoiceInput = (text: string) => {
@@ -176,6 +182,7 @@ function App() {
                  creatureData={creatureData}
                  setCreatureData={setCreatureData}
                  onComplete={handleColorComplete}
+                 isGenerating={isGenerating}
                />
              </div>
           )}
