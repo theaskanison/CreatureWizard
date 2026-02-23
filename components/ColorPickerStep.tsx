@@ -7,7 +7,6 @@ interface ColorPickerStepProps {
   creatureData: CreatureData;
   setCreatureData: React.Dispatch<React.SetStateAction<CreatureData>>;
   onComplete: () => void;
-  isGenerating: boolean;
 }
 
 const COLORS = [
@@ -31,7 +30,7 @@ const COLORS = [
   { name: 'Grey', hex: '#6B7280' },
 ];
 
-export const ColorPickerStep: React.FC<ColorPickerStepProps> = ({ creatureData, setCreatureData, onComplete, isGenerating }) => {
+export const ColorPickerStep: React.FC<ColorPickerStepProps> = ({ creatureData, setCreatureData, onComplete }) => {
   
   const toggleColor = (colorName: string) => {
     setCreatureData(prev => {
@@ -122,7 +121,7 @@ export const ColorPickerStep: React.FC<ColorPickerStepProps> = ({ creatureData, 
         <div className="pt-4 border-t border-gray-100 flex justify-end">
            <Button 
              onClick={onComplete} 
-             disabled={!isReady || isGenerating}
+             disabled={!isReady}
              size="lg"
              className="w-full md:w-auto"
            >
